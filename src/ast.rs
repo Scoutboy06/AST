@@ -1,38 +1,105 @@
-#[derive(Debug)]
-pub struct BinaryOperation {
-    pub left: Box<Expression>,
-    pub right: Box<Expression>,
+use std::rc::Rc;
+
+pub struct Span {
+    start: LineColumn,
+    end: LineColumn,
+}
+
+pub struct LineColumn {
+    line: usize,
+    column: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ASTNode {
+    Program(Rc<Program>),
+    VariableDeclaration(Rc<VariableDeclaration>),
+    BinaryExpression(Rc<BinaryExpression>),
+    IfStatement,
+    WhileStatement,
+    ReturnStatement,
+    Block,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Program {
+    start: usize,
+    end: usize,
+    body: Vec<ASTNode>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VariableDeclaration {
+    start: usize,
+    end: usize,
+    declarations: Vec<VariableDeclarator>,
+    kind: VariableKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VariableKind {
+    Let,
+    Const,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VariableDeclarator {
+    start: usize,
+    end: usize,
+    id: Identifier,
+    init: Option<ASTNode>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Identifier {
+    start: usize,
+    end: usize,
+    name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expression {
+    Int(i64),
+    Float(f64),
+    BinaryOperation(BinaryExpression),
+    Variable(Identifier),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BinaryExpression {
+    pub left: Rc<BinaryExpression>,
+    pub right: Rc<BinaryExpression>,
     pub operator: String,
 }
 
-impl BinaryOperation {
-    pub fn evaluate(&self) -> BinaryOperationResult {
-        let left = match self.left.as_ref() {
-            Expression::BinaryOperation(op) => op.evaluate(),
-            Expression::Float(float) => BinaryOperationResult::Float(*float),
-            Expression::Int(int) => BinaryOperationResult::Int(*int),
-        };
+// impl BinaryExpression {
+//     pub fn evaluate(&self) -> BinaryOperationResult {
+//         let left = match self.left.as_ref() {
+//             BinaryExpression::BinaryOperation(op) => op.evaluate(),
+//             BinaryExpression::Float(float) => BinaryOperationResult::Float(*float),
+//             BinaryExpression::Int(int) => BinaryOperationResult::Int(*int),
+//         };
 
-        let right = match self.right.as_ref() {
-            Expression::BinaryOperation(op) => op.evaluate(),
-            Expression::Float(float) => BinaryOperationResult::Float(*float),
-            Expression::Int(int) => BinaryOperationResult::Int(*int),
-        };
+//         let right = match self.right.as_ref() {
+//             BinaryExpression::BinaryOperation(op) => op.evaluate(),
+//             BinaryExpression::Float(float) => BinaryOperationResult::Float(*float),
+//             BinaryExpression::Int(int) => BinaryOperationResult::Int(*int),
+//         };
 
-        let result = match self.operator.as_str() {
-            "+" => left.add(&right),
-            "-" => left.sub(&right),
-            "*" => left.mult(&right),
-            "/" => left.div(&right),
-            "**" => todo!(),
-            _ => unreachable!(),
-        };
+//         let result = match self.operator.as_str() {
+//             "+" => left.add(&right),
+//             "-" => left.sub(&right),
+//             "*" => left.mult(&right),
+//             "/" => left.div(&right),
+//             "**" => todo!(),
+//             _ => unreachable!(),
+//         };
 
-        result
-    }
-}
+//         result
+//     }
+// }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BinaryOperationResult {
     Int(i64),
     Float(f64),
@@ -98,16 +165,4 @@ impl BinaryOperationResult {
             }
         }
     }
-}
-
-#[derive(Debug)]
-pub enum Expression {
-    Int(i64),
-    Float(f64),
-    BinaryOperation(Box<BinaryOperation>),
-}
-
-#[derive(Debug)]
-pub enum ASTNode {
-    Expression(Expression),
 }

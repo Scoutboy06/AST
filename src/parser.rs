@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 use crate::{
-    ast::{ASTNode, BinaryOperation, Expression},
+    ast::{ASTNode, BinaryExpression, Expression},
     lexer::{Lexer, Token, TokenType},
 };
 
@@ -35,7 +35,7 @@ impl<'a> Parser<'a> {
         match self.current_token.token_type {
             TokenType::Number | TokenType::Paren => {
                 let expression = self.parse_expression()?;
-                Ok(Box::new(ASTNode::Expression(expression)))
+                Ok(Box::new(ASTNode::BinaryExpression(expression)))
             }
             TokenType::Operator => Err(ParserError::InvalidCharacter(self.current_token.clone())),
             TokenType::EndOfFile => Err(ParserError::EmptyFile(self.current_token.clone())),
@@ -45,7 +45,7 @@ impl<'a> Parser<'a> {
 
     /* This method will handle the most basic component of an arithmetic
     expression, such as number, (variables,) and parenthesized expressions */
-    fn parse_factor(&mut self) -> Result<Expression, ParserError> {
+    fn parse_factor(&mut self) -> Result<BinaryExpression, ParserError> {
         let left = self.current_token.clone();
         self.advance();
 
@@ -73,7 +73,7 @@ impl<'a> Parser<'a> {
 
     /* This method will handle multiplication and division, which have
     higher precedence than addition and subtraction */
-    fn parse_term(&mut self) -> Result<Expression, ParserError> {
+    fn parse_term(&mut self) -> Result<BinaryExpression, ParserError> {
         let mut left = self.parse_factor()?;
 
         while self.current_token.token_type == TokenType::Operator
@@ -94,7 +94,7 @@ impl<'a> Parser<'a> {
     }
 
     /* This method wil handle addition and subtraction, which have the lowest precedence */
-    fn parse_expression(&mut self) -> Result<Expression, ParserError> {
+    fn parse_expression(&mut self) -> Result<BinaryExpression, ParserError> {
         let mut term = self.parse_term()?;
 
         while self.current_token.token_type == TokenType::Operator
